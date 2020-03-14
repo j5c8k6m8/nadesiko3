@@ -59,7 +59,11 @@ class NakoCompiler {
    */
   tokenize (code, isFirst, line = 0) {
     const code2 = this.prepare.convert(code)
-    return this.lexer.setInput(code2, isFirst, line)
+    if (this.cotoha) {
+      return this.lexer.setInputCotoha(code2, isFirst, line)
+    } else {
+      return this.lexer.setInput(code2, isFirst, line)
+    }
   }
 
   /**
@@ -126,7 +130,7 @@ class NakoCompiler {
       console.log(JSON.stringify(tokens, null, 2))
     }
     // 構文木を作成
-    const ast = parser.parse(tokens)
+    const ast = this.cotoha ? parser.parseCotoha(tokens) : parser.parse(tokens)
     if (this.debug && this.debugParser) {
       console.log('--- ast ---')
       console.log(JSON.stringify(ast, null, 2))

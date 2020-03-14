@@ -62,6 +62,87 @@ class NakoLexer {
     return this.result
   }
 
+  // 不要なtokenの削除と、chunk/token間の結合を行う
+  setInputCotoha (code, isFirst, line) {
+    // 暫定でlineは全て0を入れる
+    const json = JSON.parse(code)
+    for (const sentence of json) {
+      let resultSentence = [];
+      for (const chunk of sentence.chunks) {
+        if (chunk.tokens.find ( token => token.features.includes('開括弧'))) {
+          // 開括弧から閉括弧までを文字列リテラルとする。
+          const values = []
+          let stringFlg = false
+          for (const token of chunk.tokens) {
+            if (stringFlg) {
+              if (token.features.includes('閉括弧')) {
+                break
+              } else {
+                values.push(token.form)
+              }
+            } else {
+              if (token.features.includes('開括弧')) {
+                stringFlg = true
+              }
+            }
+          }
+          resultSentence.push({ id: chunk.chunk_info.id, type: "string", value: values.join(''), links: chunk.chunk_info.links, line: 0 })
+        } else {
+          let token = chunk.tokens.find ( token => token.pos === '動詞語幹');
+          if (token) {
+            resultSentence.push({ id: chunk.chunk_info.id, type: "func", value: token.lemma, links: chunk.chunk_info.links, line: 0 })
+            continue
+          }
+          token = chunk.tokens.find ( token => token.features.includes('動作'));
+          if (token) {
+            if (token.dependency_labels && token.dependency_labels.some( d => {
+              const dependency_token = chunk.tokens.find( token => token.id === d.token_id)
+              return dependency_token && dependency_token.pos === '動詞接尾辞'
+            })) {
+              resultSentence.push({ id: chunk.chunk_info.id, type: "func", value: token.lemma, links: chunk.chunk_info.links, line: 0 })
+              continue
+            }
+          }
+          token = chunk.tokens.find ( token => ['名詞', '独立詞'].includes(token.pos))
+          if (token) {
+            if (chunk.chunk_info.head >= 0) {
+              const head_chunk = sentence.chunks.find(tmp_chunk => tmp_chunk.chunk_info.id === chunk.chunk_info.head)
+              if (head_chunk) {
+                let link = head_chunk.chunk_info.links.find(link => link.link === chunk.chunk_info.id)
+                if (link && link.label === "adjectivals") {
+                  continue
+                }
+              }
+            }
+            let value = ''
+            chunk.chunk_info.links.filter( link => link.label === 'adjectivals').forEach( link => {
+              const joinChunk = sentence.chunks.find( chunk => chunk.chunk_info.id === link.link)
+              value += joinChunk.tokens.map( token => token.form ).join('')
+            })
+            for (const token of chunk.tokens) {
+              if (['名詞', '独立詞','名詞接尾辞'].includes(token.pos)) {
+                value += token.form
+              } else {
+                if (value) {
+                  break;
+                }
+              }
+            }
+            resultSentence.push({ id: chunk.chunk_info.id, type: "word", value: value, links: chunk.chunk_info.links, line: 0 })
+            continue
+          }
+          token = chunk.tokens.find ( token => ['Number'].includes(token.pos))
+          if (token) {
+            resultSentence.push({ id: chunk.chunk_info.id, type: "number", value: Number(token.lemma), links: chunk.chunk_info.links, line: 0 })
+            continue
+          }
+        }
+      }
+      this.result.push(resultSentence)
+    }
+    return this.result
+  }
+
   preDefineFunc (tokens) {
     // 関数を先読みして定義
     let i = 0

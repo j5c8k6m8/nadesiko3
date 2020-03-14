@@ -39,6 +39,7 @@ class CNako3 extends NakoCompiler {
       .option('-s, --silent', 'サイレントモードの指定')
       .option('-l, --repl', '対話シェル(REPL)の実行')
       .option('-m, --man [command]', 'マニュアルを表示する')
+      .option('-C, --cotoha', 'ことはのレスポンスを使用する')
       // .option('-h, --help', '使い方を表示する')
       // .option('-v, --version', 'バージョンを表示する')
       .parse(process.argv)
@@ -47,7 +48,7 @@ class CNako3 extends NakoCompiler {
 
   /**
    * コマンドライン引数を解析
-   * @returns {{debug: boolean, compile: any | boolean, test: any | boolean, one_liner: any | boolean, debugAll: any, run: any | boolean, repl: any | boolean, source: any | string}}
+   * @returns {{debug: boolean, compile: any | boolean, test: any | boolean, one_liner: any | boolean, debugAll: any, run: any | boolean, repl: any | boolean, source: any | string, cotoha: boolean}}
    */
   checkArguments () {
     const app = this.registerCommands()
@@ -58,6 +59,7 @@ class CNako3 extends NakoCompiler {
       this.debugParser = true
       this.debugJSCode = true
     }
+    this.cotoha = app.cotoha || false
     let args = {
       'compile': app.compile || false,
       'run': app.run || false,
@@ -71,7 +73,7 @@ class CNako3 extends NakoCompiler {
     }
     args.mainfile = app.args[0]
     args.output = app.output
-    if (/\.(nako|nako3|txt|bak)$/.test(args.mainfile)) {
+    if (/\.(nako|nako3|txt|bak|json)$/.test(args.mainfile)) {
       if (!args.output) {
         if (args.test) {
           args.output = args.mainfile.replace(/\.(nako|nako3)$/, '.spec.js')

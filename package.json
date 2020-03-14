@@ -140,6 +140,7 @@
     "node-fetch": "^2.5.0",
     "opener": "^1.5.1",
     "readline-sync": "^1.4.9",
+    "request": "^2.88.2",
     "sendkeys-js": "0.0.4",
     "caniuse-db": "^1.0.30001027"
   }

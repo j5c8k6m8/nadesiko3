@@ -7,6 +7,42 @@ const operatorList = []
 for (const key in opPriority) {operatorList.push(key)}
 
 class NakoParser extends NakoParserBase {
+  parseCotoha (tokens) {
+    this.reset()
+    this.tokens = tokens
+    let ret = {
+      type: "block",
+      block: [],
+    }
+    for (const token of tokens) {
+      for (const chunk of token) {
+        if (["string", "word", "number"].includes(chunk.type)) {
+          if (chunk.links) {
+            let link = chunk.links.find( link => link.label === "agent")
+            if (link) {
+              let arg = token.find(chunk => chunk.id === link.link)
+              if (arg) {
+                ret.block.push({
+                  type: "let",
+                  name: { type: arg.type, value: arg.value, josi: "", line: 0 },
+                  value: { type: chunk.type, value: chunk.value, josi: "", line: 0 }
+                })
+              }
+            }
+          }
+        } else if (chunk.type === "func") {
+          ret.block.push({
+            type: "func", name: chunk.value, line: 0, args: chunk.links.map(link => {
+              let arg = token.find(chunk => chunk.id === link.link)
+              return { type: arg.type, value: arg.value, label: link.label }
+            })
+          })
+        }
+      }
+    }
+    return ret
+  }
+
   /**
    * @param tokens 字句解析済みのトークンの配列
    * @return {{type, block, line}} AST(構文木)
