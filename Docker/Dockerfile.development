@@ -1,0 +1,10 @@
+FROM node:13-alpine
+WORKDIR /app
+
+RUN apk add --update --no-cache p7zip
+RUN apk add --update --no-cache xdotool
+RUN apk add --update --no-cache wine
+
+ENV NAKO_HOME /app/nadesiko3
+
+CMD [ "tail", "-f", "/dev/null" ]

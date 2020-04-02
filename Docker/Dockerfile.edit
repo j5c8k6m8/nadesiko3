@@ -1,0 +1,4 @@
+FROM nadesiko3
+RUN echo -e "#!/bin/sh\n\nnako3edit\n\ntail -f /dev/null" > nako3edit.sh
+RUN chmod 755 nako3edit.sh
+CMD [ "./nako3edit.sh" ]

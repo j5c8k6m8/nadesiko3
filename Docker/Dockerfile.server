@@ -1,0 +1,2 @@
+FROM nadesiko3
+CMD [ "nako3server" ]
